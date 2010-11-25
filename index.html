@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8" />
+  <title>jquery.irail all-in-one demo test and howto page</title>
+  <script src="js/jquery-1.4.4.min.js" charset="utf-8"></script>
+  <script src="js/qunit.js" charset="utf-8"></script>
+  <link rel="stylesheet" href="css/qunit.css" type="text/css" media="screen" charset="utf-8"/>
+</head>
+<body>
+
+<!-- Hi there! Thank you for taking a look at the source code of this document.
+
+     If you want to drop me a line, please don't hesitate: <tim.esselens@gmail.com> -->
+
+
+
+<!-- start by including the irail script into your HEAD tag (misplaced here for documentary purposes) -->
+
+<script src="lib/irail.js" charset="utf-8"></script>
+
+
+<!-- call the irail.js API, remember to wait for station to complete by listening for 'ready.stations' on window -->
+
+<script>
+$(function() { // jQuery, wait for test page to load
+
+    // irails, wait for stations to load.
+    $(window).bind('irail.ready', function() {
+
+        // STATION SEARCH ______________________________________________________________________________________________________________________________
+
+        var stations = irail.stations.search('Gent');
+
+        /** returns an array of matches stations including map coordinates
+         *
+         *  stations == [
+         *      {id: BE.NMBS.206", name: GENT DAMPOORT",     locationX: 3.740491", locationY: 51.05665"}, 
+         *      {id: BE.NMBS.207", name: GENT SINT PIETERS", locationX: 3.710232", locationY: 51.035763"}, 
+         *      {id: BE.NMBS.208", name: GENTBRUGGE",        locationX: 3.755975", locationY: 51.038714"}
+         *  ]
+         */
+
+        // -or- the jQuery style
+        $('#output').append('<h2>irail.stations.search("Gent")</h2>');
+        $.each(stations, function(i,station) { 
+            $('#output').append( [ '<div>station <em>', station.name, '</em> is located at: [', // hmmm how do I get the gmap marker to show up?
+                                  '<a target="_blank" href="http://maps.google.com/?ll=', station.locationY, ',', station.locationX, '&z=10">',
+                                    '<b>', station.locationX, '</b>,<b>', station.locationY, '</b>',
+                                  '</a>]</div>'].join('') ); 
+        });
+
+        // -or- the more classic
+        for(var i = 0; i < stations.length; i++) { /* console.log(stations[i].name) */ }
+
+        // -or- the faster
+        var i = stations.length + 1; while(--i) { /* console.log(stations[i-1].name) */ }
+
+
+
+        // CONNECTION LOOKUP ________________________________________________________________________________________________________________________
+
+        irail.connections.lookup({from: 'brussel noord', to: 'oostende'}, function(connections) {
+
+            /** the connections array , which might include vias if you need to change track by foot
+             *
+             * connections == [
+             *     {id: "0", departure:   { delay: "240", vehicle: "BE.NMBS.IC543", platform: "9", time: "1290632160", station: "BRUXELLES NORD"},
+             *               arrival:     { delay: "0",   vehicle: "BE.NMBS.IC543", platform: "3", time: "1290637020", station: "OOSTENDE"},
+             *               duration: "4860" },
+             *
+             *     //... snip similar with id 1,2,3,4 ...
+             *
+             *     {id: "5", departure:   { delay: "0",    vehicle: "BE.NMBS.IC1527", platform: "9", time: "1290662580", station: "BRUXELLES NORD"},
+             *               arrival:     { delay: "0",    vehicle: "BE.NMBS.IC827", platform: "7", time: "1290667620", station: "OOSTENDE"},
+             *               duration: "5040"
+             *               vias:  { 
+             *                 number: "1",
+             *                 via:   { # BUG 
+             *                    id: "0", 
+             *                    arrival: { platform: "5", time: "1290666540"},
+             *                    departure: { platform: "7", time: "1290666840"},
+             *                    timeBetween: "300",
+             *                    station: "BRUGGE ",
+             *                    vehicle: "BE.NMBS.IC1527" 
+             *                 }
+             *              }
+             *    }];
+             */
+
+            $('#output').append("<h2>irail.connections.lookup({from: 'brussel noord', to: 'oostende'}, function() {} )</h2>");
+
+            $.each(connections, function(i, connection) {
+                var d = new Date(connection.departure.time * 1000);
+                $('#output').append( [
+                    '<div> the train ',
+                    "<em>", connection.departure.station, ' - ', connection.arrival.station, "</em> ",
+                    'of <b>', d.getHours(), '</b>:<b>', d.getMinutes(), '</b> ',
+                    'departs on platform <b>', connection.departure.platform, '</b> ',
+                    (connection.departure.delay > 0 ? ["<strong>with a delay of <b>", parseInt(connection.departure.delay/60,10), "</b>m</strong>"].join('') 
+                                                    : 'with no delay')
+                ].join(''));
+            });
+                    
+        });
+
+        // LIVEBOARD LOOKUP ________________________________________________________________________________________________________________________
+
+        irail.liveboards.lookup('brussel noord', 'dep', update);
+       
+        // and keep at it ever 60s...
+        setInterval(function() { irail.liveboards.lookup('brussel noord', 'dep', update); }, 60*1000);
+
+        function update(liveboard) {
+
+            var servertime = new Date(liveboard.timestamp * 1000);
+
+            $('#liveboard').empty().append([
+                '<table width="100%">',
+                    '<caption>', '<h2>', liveboard.station,' ', liveboard.direction , ' at (', servertime ,')</h2>', '</caption>',
+                    '<thead><tr>',
+                        '<th class="platform">#</th>',
+                        '<th>Direction</th>',
+                        '<th>Time</th>',
+                        '<th>delay</th>',
+                    '</tr></thead>',
+                    '<tbody>',
+                    '</tbody>',
+                '</table>'].join(''));
+
+            $.each(liveboard.entries, function(i, entry) {
+                var d = new Date(entry.time * 1000);
+                var sched = new Date( (entry.time + entry.delay) * 1000 );
+                $('#liveboard table tbody').append([
+                    '<tr class="', (sched.getTime() + 2 * 60 * 1000 < (servertime.getTime()) ? 'left' : 'pending') ,'" >',
+                        '<td class="platform">',entry.platform,'</td>',
+                        '<td class="station">',entry.station,'</td>',
+                        '<td><b>',d.getHours(),'</b>:<b>',d.getMinutes(),'</b></td>',
+                        '<td>', ( entry.delay > 0 ? '<em>+'+parseInt(entry.delay / 60 , 10)+'</em> min' : '-'), '<td>',
+                    '</tr>'
+                ].join(''));
+            });
+        };
+
+
+        // VEHICLE LOOKUP ________________________________________________________________________________________________________________________
+        irail.vehicles.lookup('BE.NMBS.P8080', function(vehicle) {
+            /** 
+             * vehicle == { 
+             *  "stops: [
+             *      { delay: "0", id: "0", station: "POPERINGE", time: "1290697920"},
+             *      { delay: "0", id: "1", station: "IEPER", time: "1290698460"},
+             *      { delay: "0", id: "2", station: "KOMEN", time: "1290699060"},
+             *
+             *      // snip id 3..12
+             *
+             *      { delay: "0", id: "12", station: "GHENT SINT PIETERS", time: "1290702600"}
+             * ]};
+             */
+             $.each(vehicle.stops,function(i,stop) {
+                 console.log('train [%s to %s] arrives in %s on %s', 
+                                vehicle.stops[0].station, 
+                                vehicle.stops[vehicle.stops.length-1].station, 
+                                stop.station, 
+                                new Date(stop.time * 1000) );
+             });
+
+        });
+
+        // DEBUGGING _____________________________________________________________________________________________________________________________________
+
+        $('#qunit-header').click(function() { $(this).parent().hide(); $('table td.main').css('width','100%'); return false; });
+        // console.log('stations loaded %o', irail.cache.get('stations')); // for debugging
+
+    });
+
+});
+</script>
+
+<!-- END of documentation. Begin of irail.be unit tests -->
+
+<script>
+module("Compile"); //----------------------------------------------------------------------------------------------------------
+
+test("global irail variables", function() {
+    ok(window, "browser env, window must exist");
+    ok(typeof irail != "undefined", "global irail variable must exist");
+    ok(typeof irail == "object", "irail is an object");
+    ok(!! typeof irail.splice, "irail is not an array");
+});
+
+test("exported irail API", function() {
+
+    $.each("stations connections cache".split(' '), function(i,k) {
+        ok(irail[k], "irail exports '"+k+"' key");
+    });
+
+    ok(irail.stations.search, "irail exports 'stations.search'");
+    ok(typeof irail.stations.search == "function", "irail.stations.search is a function");
+
+    ok(irail.connections.lookup, "irail exports 'connections.lookup'");
+    ok(typeof irail.connections.lookup == "function", "irails.connections.lookupis a function");
+
+    ok(irail.cache.get, "irail exports 'cache.get'");
+    ok(typeof irail.cache.get == "function", "irail.cache.get is a function");
+
+    ok(irail.cache.clear, "irail exports 'cache.clear'");
+    ok(typeof irail.cache.clear == "function", "irail.cache.clear is a function");
+});
+
+
+$(window).bind('irail.ready',function() {
+
+module("Loading"); //---------------------------------------------------------------------------------------------------------
+
+test("check station list access and length", function() {
+
+    ok(typeof irail != 'undefined', "irail variable exists");
+    ok(typeof irail.cache == 'object', "irail.cache ns exists");
+    ok(irail.cache.get('stations'), "call to cache get returns ok");
+    ok(typeof irail.cache.get('stations').push == 'function', "call to cache get returns an array");
+    ok(irail.cache.get('stations').length,"number of loaded stations > 0");
+
+});
+
+module("Live station search"); //---------------------------------------------------------------------------------------------
+
+test("check for known stations", function() {
+    
+    ok($.grep(irail.cache.get('stations'), function(s) { return /brussel noord/i.test(s) }), "Brussel Noord exists");
+    ok($.grep(irail.cache.get('stations'), function(s) { return /antwerpen centraal/i.test(s) }), "Antwerpen Centraal exists");
+    ok($.grep(irail.cache.get('stations'), function(s) { return /oostende/i.test(s) }), "Oostende exists");
+
+    ok($.grep(irail.cache.get('stations'), function(s) { return /the matrix/i.test(s) }).length == 0, "there is no spoon");
+});
+
+test("search form known stations", function() {
+
+    ok(irail.stations.search('antwerpen centraal'), "searching returned ok");
+    ok(typeof irail.stations.search('antwerpen centraal').push == "function", "searching returned array");
+    ok(irail.stations.search('antwerpen centraal').length != 0, "searching returned non empty array");
+    ok(irail.stations.search('antwerpen centraal')[0].name, "first result has a name");
+    ok(irail.stations.search('antwerpen centraal')[0].name == "ANTWERPEN CENTRAAL", "first result eq ANTWERPEN CENTRAAL");
+
+    ok(irail.stations.search('brussel noord'), "searching returned ok");
+    ok(typeof irail.stations.search('brussel noord').push == "function", "searching returned array");
+    ok(irail.stations.search('brussel noord').length != 0, "searching returned non empty array");
+    ok(irail.stations.search('brussel noord')[0].name, "first result has a name");
+    ok(irail.stations.search('brussel noord')[0].name == "BRUSSEL NOORD", "first result eq BRUSSEL NOORD");
+
+    ok(irail.stations.search('oostende'), "searching returned ok");
+    ok(typeof irail.stations.search('oostende').push == "function", "searching returned array");
+    ok(irail.stations.search('oostende').length != 0, "searching returned non empty array");
+    ok(irail.stations.search('oostende')[0].name, "first result has a name");
+    ok(irail.stations.search('oostende')[0].name == "OOSTENDE", "first result eq OOSTENDE");
+});
+
+module("Live connnection search"); //---------------------------------------------------------------------------------------------
+asyncTest("Brussel Noord - Oostende", function() {
+
+    irail.connections.lookup({from: 'brussel noord', to: 'oostende'}, function(connections) {
+        start();
+        ok(typeof connections != 'undefined','callback returned ok');
+        ok(typeof connections.push == "function",'callback returned an array');
+        ok(connections.length > 0, 'should have at least one connection'); // assuming brussel - oostende has a connection every day
+
+        $.each(connections,function(i) {
+            $.each('id departure arrival duration'.split(' '),function(_,k) {
+                ok(connections[i][k], "connection has a '"+k+"' property");
+            });
+
+            $.each('delay vehicle platform time station'.split(' '),function(_,k) {
+                ok(connections[i]['departure'][k], 'departure ['+ connections[i]['departure'].station +"] of ["+new Date(connections[i]['departure'].time * 1000)+"] must have '" + k + "'");
+                ok(connections[i]['arrival'][k], 'departure ['+ connections[i]['departure'].station +"] departure must have '" + k + "'");
+            });
+        });
+    });
+
+});
+
+asyncTest("Brussel Noord - Luik", function() {
+
+    irail.connections.lookup({from: 'brussel noord', to: 'luik'}, function(connections) {
+        start();
+        ok(typeof connections != 'undefined','callback returned ok');
+        ok(typeof connections.push == "function",'callback returned an array');
+        ok(connections.length > 0, 'should have at least one connection'); // assuming brussel - oostende has a connection every day
+
+        $.each(connections,function(i) {
+            $.each('id departure arrival duration'.split(' '),function(_,k) {
+                ok(typeof connections[i][k] != 'undefined', "connection has a '"+k+"' property");
+            });
+
+            $.each('delay vehicle platform time station'.split(' '),function(_,k) {
+                ok(connections[i]['departure'][k], 'departure ['+ connections[i]['departure'].station +"] of ["+new Date(connections[i]['departure'].time * 1000)+"] must have '" + k + "'");
+                ok(connections[i]['arrival'][k], 'departure ['+ connections[i]['departure'].station +"] departure must have '" + k + "'");
+            });
+        });
+    });
+
+});
+
+module("Live liveboard test"); //---------------------------------------------------------------------------------------------
+
+asyncTest("LiveBoard Brussel Noord", function() {
+    irail.liveboards.lookup("Brussel Noord", 'arr',function(liveboard) {
+        start();
+        console.warn(liveboard);
+        ok(typeof liveboard != 'undefined', "liveboard is defined");
+        ok(typeof liveboard.timestamp != 'undefined', "liveboard has a timestamp");
+        ok(typeof liveboard.timestamp == 'number', "timestamp is a number");
+        ok(liveboard.station, "liveboard has a station");
+        ok(liveboard.direction, "liveboard has a direction");
+
+        var epoch_now = parseInt(new Date().getTime() / 1000, 10);                                      
+        // measure of quality, some test might fail if your clock is not synchronized to an ntp server
+        ok(liveboard.timestamp <= epoch_now, "timestamp must not be in the future");                     
+        ok(liveboard.timestamp + 2 > epoch_now, "timestamp must be within reasonable parameters");
+
+        $.each(liveboard.entries, function(i,entry) {
+            ok(entry,"entry exists");
+
+            $.each('id delay time vehicle platform station'.split(' '),function(_,k) {
+                ok(typeof entry[k] != 'undefined', "liveboard entry has a '"+k+"' property");
+            });
+            ok(typeof entry.time == 'number', "time is a number");
+            ok(typeof entry.delay == 'number', "delay is a number");
+        });
+    });
+});
+
+
+
+});
+</script>
+
+
+<style> 
+    body { background: #f7f5f0 }
+    .main { width: 62%; }
+    .main iframe { border: none; width: 100%; }
+    .side .qunit { margin: 2em;  }
+    .main h1 { font-weight: bold; text-shadow: 0px 2px 1px white; font-family: Tahoma; letter-spacing: 5px;}
+    .main h1 b { font-weight: normal: line-height: 200%; letter-spacing: 0; font-size: 0.4em; }
+    .main h2 { font-size: 1em; color: grey;}
+    .main p { margin-left: 1em; font-family: Georgia; line-height: 150%; }
+
+    .output {
+        margin: 10px;
+        padding: 10px;
+        border: 1px solid grey;
+        background: black;
+        color: white;
+        font-family: monospace;
+        font-size: 1em;
+        line-height: 150%;
+        font-weight: bold;
+    }
+
+    .output h2 { color: Orchid; margin: 0.5em 0; text-decoration: none; }
+    .output div { margin-left: 1em; }
+    .output em { color: lightSkyBlue; }
+    .output b { color: yellowgreen; }
+    .output a { color: white }
+    .output strong { color: red; }
+
+    #liveboard .platform { width: 50px; color: orange; }
+    #liveboard .station { width: 50%;  }
+    #liveboard table { border-collapse: collapse; }
+    #liveboard thead { background-color: #444; }
+    #liveboard thead th { text-align: left; }
+    #liveboard tbody td em { color: red; font-weight: bold;}
+    #liveboard .left { opacity: 0.3; }
+    @media screen and (max-device-width: 480px) { #liveboard { font-size: 2.5em; } }
+</style>
+
+<table> <!-- no it's NOT blasphemy, less typing is ok here. Have a look at -moz-box-flex though -->
+    <tr><td class="main" valign="top">
+        <h1>iRail.be API wrapper using jQuery <b style="color: black;">&#9608;</b><b style="color: yellow;">&#9608;</b><b style="color: red;">&#9608;</b></h1>
+        <p>
+        jquery.irail is not so much a jquery plugin, it's an iRail.be API wrapper using the jQuery library for jsonp
+        calls. It's written in 2010 by <strong>Tim Esselens</strong> and licensed under <strong>MIT license</strong>.
+        It's small ( ~ 2 kB gzipped). Hopefully quite readable (let me know). And it has a lot of testcases which is
+        important if you are going to depend upon more then one layer of API.
+        </p>
+        <p>This is a <strong>technology preview</strong>, more testcases required and welcomed</p>
+        <h2>Download or fork</h2>
+        <p><a href="http://github.com/blaze-x/jquery.irail">on GitHub</a></p>
+
+        <h2>License Addendum: WARNING</h2>
+        <p>You must inform your end user that: All information conveyed is indicative at best. It must not be used as a
+        reliable source of information if your journey so requires. Also note that &mdash;considering the Heisenberg
+        uncertainty principle&mdash; we distance ourselves from any claim with respect to the correctness of time and place
+        correlated data. Besides, you querying the information changes the outcome of it anyway.  And if that doesn't
+        convince you, Murphey's Law should.  You have thusly been warned! ;-)
+        </p>
+        <h2>Live query demo, see page source</h2>
+        <div class="output" id="output"></div>
+        <h2>Live billboard demo, see page source</h2>
+        <div class="output" id="liveboard"></div>
+       
+        <!-- <p>You can view the page source for an example or read the asciidoc documentation further on</p> -->
+        <!--<h2>Documentation: api.txt in an ifame</h2>-->
+        <!-- <iframe src="doc.html"> </iframe> -->
+    </td><td class="side" valign="top">
+        <div class="qunit">
+            <h1 id="qunit-header">iRail.be API unit test</h1>
+            <h2 id="qunit-banner"></h2>
+            <div id="qunit-testrunner-toolbar"></div>
+            <h2 id="qunit-userAgent"></h2>
+            <ol id="qunit-tests"></ol>
+        </div>
+    </td></tr>
+</table>
+
+</body>
+</html>
+
+<!--
+Copyright (c) 2010 Tim Esselens <tim.esselens@gmail.com> 
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
