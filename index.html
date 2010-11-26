@@ -168,11 +168,12 @@ $(function() { // jQuery, wait for test page to load
              * ]};
              */
              $.each(vehicle.stops,function(i,stop) {
+                 /*
                  console.log('train [%s to %s] arrives in %s on %s', 
                                 vehicle.stops[0].station, 
                                 vehicle.stops[vehicle.stops.length-1].station, 
                                 stop.station, 
-                                new Date(stop.time * 1000) );
+                                new Date(stop.time * 1000) ); */
              });
 
         });
@@ -340,6 +341,40 @@ asyncTest("LiveBoard Brussel Noord", function() {
             ok(typeof entry.time == 'number', "time is a number");
             ok(typeof entry.delay == 'number', "delay is a number");
         });
+    });
+});
+
+module("iRail API structure test"); //----------------------------------------------------------------------------------------------------------
+asyncTest("Liveboard singular arrival", function() {
+    $.ajax({
+        type: "GET",
+        url: 'http://dev.api.irail.be/liveboard/',
+        data: { format: 'json', station: 'MOLLEM', arrdep: 'ARR' },
+        dataType: 'jsonp',
+        success: function(json) {
+            start();
+            ok(typeof json.arrivals != 'undefined', 'arrivals key exists');
+            ok(typeof json.arrivals.arrival.push == 'function', 'arrivals.arrival is an array');
+        }
+    });
+
+});
+
+asyncTest("Connection multiple vias", function() {
+    $.ajax({
+        type: "GET",
+        url: 'http://dev.api.irail.be/connections/',
+        data: { format: 'json', from: 'Oostende', to: 'Eupen' },
+        dataType: 'jsonp',
+        success: function(json) {
+            start();
+            for(var i in json.connection) { var c = json.connection[i];
+                if(c.vias) {
+                    ok(typeof c.vias.via.push == "function", 'vias.via must be an array');
+                }
+            }
+
+        }
     });
 });
 
