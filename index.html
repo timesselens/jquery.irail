@@ -129,10 +129,15 @@ $(function() { // jQuery, wait for test page to load
                 '</table>'].join(''));
 
             $.each(liveboard.entries, function(i, entry) {
-                var d = new Date(entry.time * 1000);
                 var sched = new Date( (entry.time + entry.delay) * 1000 );
+
+                function date_diff(d1,d2) { return parseInt( (d1.getTime() - d2.getTime())/1000, 10 ) }
+
+                var tristate = date_diff(sched, servertime) <= 0 ? 'left' : date_diff(sched,servertime) < 60 ? 'leaving' : 'pending';
+        
+                var d = new Date(entry.time * 1000);
                 $('#liveboard table tbody').append([
-                    '<tr class="', (sched.getTime() + 2 * 60 * 1000 < (servertime.getTime()) ? 'left' : 'pending') ,'" >',
+                    '<tr class="', tristate ,'" >',
                         '<td class="platform">',entry.platform,'</td>',
                         '<td class="station">',entry.station,'</td>',
                         '<td><b>',d.getHours(),'</b>:<b>',d.getMinutes(),'</b></td>',
@@ -140,6 +145,11 @@ $(function() { // jQuery, wait for test page to load
                     '</tr>'
                 ].join(''));
             });
+
+            setInterval(function() {
+                $('#liveboard table tr.leaving').animate({'opacity': 0.3}, 1500);
+                $('#liveboard table tr.leaving').animate({'opacity': 1}, 1500);
+            }, 3000);
         };
 
 
@@ -218,8 +228,13 @@ test("check station list access and length", function() {
     ok(typeof irail != 'undefined', "irail variable exists");
     ok(typeof irail.cache == 'object', "irail.cache ns exists");
     ok(irail.cache.get('stations'), "call to cache get returns ok");
-    ok(typeof irail.cache.get('stations').push == 'function', "call to cache get returns an array");
+    ok(typeof irail.cache.get('stations').push == 'function', "call to station cache get returns an array");
     ok(irail.cache.get('stations').length,"number of loaded stations > 0");
+    ok(irail.cache.get('timestamps'), "call to timestamps cache get returns ok");
+    ok(typeof irail.cache.get('timestamps') == 'object', 'call to timestamp cache returns an object');
+    ok(typeof irail.cache.get('timestamps').push != 'function', 'call to timestamp cache returns a hash');
+    ok(typeof irail.cache.get('timestamps')['last_server_response'] != 'undefined', 'last_server_response exists');
+    ok(irail.cache.get('timestamps')['last_server_response'] > new Date().getTime() - 5, 'ok last_server_response is no longer then 5 sec ago');
 
 });
 
@@ -305,7 +320,6 @@ module("Live liveboard test"); //-----------------------------------------------
 asyncTest("LiveBoard Brussel Noord", function() {
     irail.liveboards.lookup("Brussel Noord", 'arr',function(liveboard) {
         start();
-        console.warn(liveboard);
         ok(typeof liveboard != 'undefined', "liveboard is defined");
         ok(typeof liveboard.timestamp != 'undefined', "liveboard has a timestamp");
         ok(typeof liveboard.timestamp == 'number', "timestamp is a number");
@@ -370,6 +384,7 @@ asyncTest("LiveBoard Brussel Noord", function() {
     #liveboard thead { background-color: #444; }
     #liveboard thead th { text-align: left; }
     #liveboard tbody td em { color: red; font-weight: bold;}
+    #liveboard .leaving { }
     #liveboard .left { opacity: 0.3; }
     @media screen and (max-device-width: 480px) { #liveboard { font-size: 2.5em; } }
 </style>
