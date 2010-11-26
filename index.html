@@ -344,6 +344,40 @@ asyncTest("LiveBoard Brussel Noord", function() {
     });
 });
 
+module("iRail API structure test"); //----------------------------------------------------------------------------------------------------------
+asyncTest("Liveboard singular arrival", function() {
+    $.ajax({
+        type: "GET",
+        url: 'http://dev.api.irail.be/liveboard/',
+        data: { format: 'json', station: 'MOLLEM', arrdep: 'ARR' },
+        dataType: 'jsonp',
+        success: function(json) {
+            start();
+            ok(typeof json.arrivals != 'undefined', 'arrivals key exists');
+            ok(typeof json.arrivals.arrival.push == 'function', 'arrivals.arrival is an array');
+        }
+    });
+
+});
+
+asyncTest("Connection multiple vias", function() {
+    $.ajax({
+        type: "GET",
+        url: 'http://dev.api.irail.be/connections/',
+        data: { format: 'json', from: 'Oostende', to: 'Eupen' },
+        dataType: 'jsonp',
+        success: function(json) {
+            start();
+            for(var i in json.connection) { var c = json.connection[i];
+                if(c.vias) {
+                    ok(typeof c.vias.via.push == "function", 'vias.via must be an array');
+                }
+            }
+
+        }
+    });
+});
+
 
 
 });
