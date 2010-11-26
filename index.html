@@ -234,7 +234,7 @@ test("check station list access and length", function() {
     ok(typeof irail.cache.get('timestamps') == 'object', 'call to timestamp cache returns an object');
     ok(typeof irail.cache.get('timestamps').push != 'function', 'call to timestamp cache returns a hash');
     ok(typeof irail.cache.get('timestamps')['last_server_response'] != 'undefined', 'last_server_response exists');
-    ok(irail.cache.get('timestamps')['last_server_response'] > new Date().getTime() - 5, 'ok last_server_response is no longer then 5 sec ago');
+    ok(irail.cache.get('timestamps')['last_server_response'] > (parseInt( new Date().getTime() / 1000 , 10 ) - 5 ), 'ok last_server_response is no longer then 5 sec ago');
 
 });
 
