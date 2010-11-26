@@ -228,8 +228,13 @@ test("check station list access and length", function() {
     ok(typeof irail != 'undefined', "irail variable exists");
     ok(typeof irail.cache == 'object', "irail.cache ns exists");
     ok(irail.cache.get('stations'), "call to cache get returns ok");
-    ok(typeof irail.cache.get('stations').push == 'function', "call to cache get returns an array");
+    ok(typeof irail.cache.get('stations').push == 'function', "call to station cache get returns an array");
     ok(irail.cache.get('stations').length,"number of loaded stations > 0");
+    ok(irail.cache.get('timestamps'), "call to timestamps cache get returns ok");
+    ok(typeof irail.cache.get('timestamps') == 'object', 'call to timestamp cache returns an object');
+    ok(typeof irail.cache.get('timestamps').push != 'function', 'call to timestamp cache returns a hash');
+    ok(typeof irail.cache.get('timestamps')['last_server_response'] != 'undefined', 'last_server_response exists');
+    ok(irail.cache.get('timestamps')['last_server_response'] > new Date().getTime() - 5, 'ok last_server_response is no longer then 5 sec ago');
 
 });
 
