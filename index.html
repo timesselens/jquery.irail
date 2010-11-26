@@ -129,10 +129,15 @@ $(function() { // jQuery, wait for test page to load
                 '</table>'].join(''));
 
             $.each(liveboard.entries, function(i, entry) {
-                var d = new Date(entry.time * 1000);
                 var sched = new Date( (entry.time + entry.delay) * 1000 );
+
+                function date_diff(d1,d2) { return parseInt( (d1.getTime() - d2.getTime())/1000, 10 ) }
+
+                var tristate = date_diff(sched, servertime) <= 0 ? 'left' : date_diff(sched,servertime) < 60 ? 'leaving' : 'pending';
+        
+                var d = new Date(entry.time * 1000);
                 $('#liveboard table tbody').append([
-                    '<tr class="', (sched.getTime() + 2 * 60 * 1000 < (servertime.getTime()) ? 'left' : 'pending') ,'" >',
+                    '<tr class="', tristate ,'" >',
                         '<td class="platform">',entry.platform,'</td>',
                         '<td class="station">',entry.station,'</td>',
                         '<td><b>',d.getHours(),'</b>:<b>',d.getMinutes(),'</b></td>',
@@ -140,6 +145,11 @@ $(function() { // jQuery, wait for test page to load
                     '</tr>'
                 ].join(''));
             });
+
+            setInterval(function() {
+                $('#liveboard table tr.leaving').animate({'opacity': 0.3}, 1500);
+                $('#liveboard table tr.leaving').animate({'opacity': 1}, 1500);
+            }, 3000);
         };
 
 
@@ -370,6 +380,7 @@ asyncTest("LiveBoard Brussel Noord", function() {
     #liveboard thead { background-color: #444; }
     #liveboard thead th { text-align: left; }
     #liveboard tbody td em { color: red; font-weight: bold;}
+    #liveboard .leaving { }
     #liveboard .left { opacity: 0.3; }
     @media screen and (max-device-width: 480px) { #liveboard { font-size: 2.5em; } }
 </style>
