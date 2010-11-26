@@ -315,7 +315,6 @@ module("Live liveboard test"); //-----------------------------------------------
 asyncTest("LiveBoard Brussel Noord", function() {
     irail.liveboards.lookup("Brussel Noord", 'arr',function(liveboard) {
         start();
-        console.warn(liveboard);
         ok(typeof liveboard != 'undefined', "liveboard is defined");
         ok(typeof liveboard.timestamp != 'undefined', "liveboard has a timestamp");
         ok(typeof liveboard.timestamp == 'number', "timestamp is a number");
