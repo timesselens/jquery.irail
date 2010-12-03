@@ -1,9 +1,26 @@
 jquery.irail an API wrapper for api.irail.be
 ============================================
 
-WARNING: developer preview. no docs, use (documented) source
+WARNING: This is a developer preview. no docs, use (documented) source
 
+
+Manifest
+~~~~~~~~
+------------------------------------------------------------------------
+index.html: contains demo and testcases
+lib/irail.js: contains iRail API wrapper
+------------------------------------------------------------------------
+
+Online demo
+~~~~~~~~~~~
 online demo version on http://devel.datif.be/jquery.irail/
+
+Help wanted
+~~~~~~~~~~~
+this lib was developed on Linux using Firefox as primary target. It has not
+fully been tested in other browsers.  There are a lot of testcases though, so
+if you spot a bug in your favorite browser, please fork or drop me a line:
+tim.esselens(A)gmail.com
 
 // vim: syn=asciidoc
 
