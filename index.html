@@ -256,19 +256,19 @@ test("search form known stations", function() {
     ok(typeof irail.stations.search('antwerpen centraal').push == "function", "searching returned array");
     ok(irail.stations.search('antwerpen centraal').length != 0, "searching returned non empty array");
     ok(irail.stations.search('antwerpen centraal')[0].name, "first result has a name");
-    ok(irail.stations.search('antwerpen centraal')[0].name == "ANTWERPEN CENTRAAL", "first result eq ANTWERPEN CENTRAAL");
+    ok(irail.stations.search('antwerpen centraal')[0].name == "Antwerpen Centraal", "first result eq Antwerpen Centraal");
 
     ok(irail.stations.search('brussel noord'), "searching returned ok");
     ok(typeof irail.stations.search('brussel noord').push == "function", "searching returned array");
     ok(irail.stations.search('brussel noord').length != 0, "searching returned non empty array");
     ok(irail.stations.search('brussel noord')[0].name, "first result has a name");
-    ok(irail.stations.search('brussel noord')[0].name == "BRUSSEL NOORD", "first result eq BRUSSEL NOORD");
+    ok(irail.stations.search('brussel noord')[0].name == "Brussel Noord", "first result eq Brussel Noord");
 
     ok(irail.stations.search('oostende'), "searching returned ok");
     ok(typeof irail.stations.search('oostende').push == "function", "searching returned array");
     ok(irail.stations.search('oostende').length != 0, "searching returned non empty array");
     ok(irail.stations.search('oostende')[0].name, "first result has a name");
-    ok(irail.stations.search('oostende')[0].name == "OOSTENDE", "first result eq OOSTENDE");
+    ok(irail.stations.search('oostende')[0].name == "Oostende", "first result eq Oostende");
 });
 
 module("Live connnection search"); //---------------------------------------------------------------------------------------------
