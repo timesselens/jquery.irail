@@ -286,8 +286,9 @@ asyncTest("Brussel Noord - Oostende", function() {
             });
 
             $.each('delay vehicle platform time station'.split(' '),function(_,k) {
-                ok(connections[i]['departure'][k], 'departure ['+ connections[i]['departure'].station +"] of ["+new Date(connections[i]['departure'].time * 1000)+"] must have '" + k + "'");
+                ok(connections[i]['departure'][k], 'departure ['+ connections[i]['departure'].station +"] must have '" + k + "'");
                 ok(connections[i]['arrival'][k], 'departure ['+ connections[i]['departure'].station +"] departure must have '" + k + "'");
+                ok((typeof connections[i]['arrival'][k]).match(/string|number/i), 'departure ['+ connections[i]['departure'].station +"] departure must contain string or number for '" + k + "'");
             });
         });
     });
@@ -308,8 +309,9 @@ asyncTest("Brussel Noord - Luik", function() {
             });
 
             $.each('delay vehicle platform time station'.split(' '),function(_,k) {
-                ok(connections[i]['departure'][k], 'departure ['+ connections[i]['departure'].station +"] of ["+new Date(connections[i]['departure'].time * 1000)+"] must have '" + k + "'");
+                ok(connections[i]['departure'][k], 'departure ['+ connections[i]['departure'].station +"] must have '" + k + "'");
                 ok(connections[i]['arrival'][k], 'departure ['+ connections[i]['departure'].station +"] departure must have '" + k + "'");
+                ok((typeof connections[i]['arrival'][k]).match(/string|number/i), 'departure ['+ connections[i]['departure'].station +"] departure must contain string or number for '" + k + "'");
             });
         });
     });
