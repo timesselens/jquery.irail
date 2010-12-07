@@ -108,8 +108,8 @@ $(function() { // jQuery, wait for test page to load
 
         irail.liveboards.lookup('brussel noord', 'dep', update);
        
-        // and keep at it ever 60s...
-        setInterval(function() { irail.liveboards.lookup('brussel noord', 'dep', update); }, 60*1000);
+        // and keep at it ever 30s...
+        setInterval(function() { irail.liveboards.lookup('brussel noord', 'dep', update); }, 30*1000);
 
         function update(liveboard) {
 
@@ -256,19 +256,19 @@ test("search form known stations", function() {
     ok(typeof irail.stations.search('antwerpen centraal').push == "function", "searching returned array");
     ok(irail.stations.search('antwerpen centraal').length != 0, "searching returned non empty array");
     ok(irail.stations.search('antwerpen centraal')[0].name, "first result has a name");
-    ok(irail.stations.search('antwerpen centraal')[0].name == "ANTWERPEN CENTRAAL", "first result eq ANTWERPEN CENTRAAL");
+    ok(irail.stations.search('antwerpen centraal')[0].name == "Antwerpen Centraal", "first result eq Antwerpen Centraal");
 
     ok(irail.stations.search('brussel noord'), "searching returned ok");
     ok(typeof irail.stations.search('brussel noord').push == "function", "searching returned array");
     ok(irail.stations.search('brussel noord').length != 0, "searching returned non empty array");
     ok(irail.stations.search('brussel noord')[0].name, "first result has a name");
-    ok(irail.stations.search('brussel noord')[0].name == "BRUSSEL NOORD", "first result eq BRUSSEL NOORD");
+    ok(irail.stations.search('brussel noord')[0].name == "Brussel Noord", "first result eq Brussel Noord");
 
     ok(irail.stations.search('oostende'), "searching returned ok");
     ok(typeof irail.stations.search('oostende').push == "function", "searching returned array");
     ok(irail.stations.search('oostende').length != 0, "searching returned non empty array");
     ok(irail.stations.search('oostende')[0].name, "first result has a name");
-    ok(irail.stations.search('oostende')[0].name == "OOSTENDE", "first result eq OOSTENDE");
+    ok(irail.stations.search('oostende')[0].name == "Oostende", "first result eq Oostende");
 });
 
 module("Live connnection search"); //---------------------------------------------------------------------------------------------
@@ -286,8 +286,9 @@ asyncTest("Brussel Noord - Oostende", function() {
             });
 
             $.each('delay vehicle platform time station'.split(' '),function(_,k) {
-                ok(connections[i]['departure'][k], 'departure ['+ connections[i]['departure'].station +"] of ["+new Date(connections[i]['departure'].time * 1000)+"] must have '" + k + "'");
+                ok(connections[i]['departure'][k], 'departure ['+ connections[i]['departure'].station +"] must have '" + k + "'");
                 ok(connections[i]['arrival'][k], 'departure ['+ connections[i]['departure'].station +"] departure must have '" + k + "'");
+                ok((typeof connections[i]['arrival'][k]).match(/string|number/i), 'departure ['+ connections[i]['departure'].station +"] departure must contain string or number for '" + k + "'");
             });
         });
     });
@@ -308,8 +309,9 @@ asyncTest("Brussel Noord - Luik", function() {
             });
 
             $.each('delay vehicle platform time station'.split(' '),function(_,k) {
-                ok(connections[i]['departure'][k], 'departure ['+ connections[i]['departure'].station +"] of ["+new Date(connections[i]['departure'].time * 1000)+"] must have '" + k + "'");
+                ok(connections[i]['departure'][k], 'departure ['+ connections[i]['departure'].station +"] must have '" + k + "'");
                 ok(connections[i]['arrival'][k], 'departure ['+ connections[i]['departure'].station +"] departure must have '" + k + "'");
+                ok((typeof connections[i]['arrival'][k]).match(/string|number/i), 'departure ['+ connections[i]['departure'].station +"] departure must contain string or number for '" + k + "'");
             });
         });
     });
@@ -392,6 +394,7 @@ asyncTest("Connection multiple vias", function() {
     .main h1 { font-weight: bold; text-shadow: 0px 2px 1px white; font-family: Tahoma; letter-spacing: 5px;}
     .main h1 b { font-weight: normal: line-height: 200%; letter-spacing: 0; font-size: 0.4em; }
     .main h2 { font-size: 1em; color: grey;}
+    .main h3 { color: grey; font-weight: normal; font-size: 0.9em; margin: 0.5em 1em; font-variant: small-caps; }
     .main p { margin-left: 1em; font-family: Georgia; line-height: 150%; }
 
     .output {
@@ -420,7 +423,7 @@ asyncTest("Connection multiple vias", function() {
     #liveboard thead th { text-align: left; }
     #liveboard tbody td em { color: red; font-weight: bold;}
     #liveboard .leaving { }
-    #liveboard .left { opacity: 0.3; filter: alpha(opacity = 30); }
+    #liveboard .left { opacity: 0.3; }
     @media screen and (max-device-width: 480px) { #liveboard { font-size: 2.5em; } }
 </style>
 
@@ -433,9 +436,14 @@ asyncTest("Connection multiple vias", function() {
         It's small ( ~ 2 kB gzipped). Hopefully quite readable (let me know). And it has a lot of testcases which is
         important if you are going to depend upon more then one layer of API.
         </p>
-        <p>This is a <strong>technology preview</strong>, more testcases required and welcomed</p>
+        <h2>Changelog</h2>
+        <h3>Tue Dec  7 21:24:39 CET 2010</h3>
+        <ul>
+            <li> Added more testcases for connection lookups
+        </ul>
         <h2>Download or fork</h2>
-        <p><a href="http://github.com/blaze-x/jquery.irail">on GitHub</a></p>
+        <p>This is a <strong>technology preview</strong>, more testcases required and welcomed</p>
+        <p>Have a look at the source on <a href="http://github.com/blaze-x/jquery.irail">GitHub</a></p>
 
         <h2>License Addendum: WARNING</h2>
         <p>You must inform your end user that: All information conveyed is indicative at best. It must not be used as a
