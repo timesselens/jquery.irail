@@ -68,7 +68,7 @@ $(function() {
                         '<td class="station">',entry.station,'</td>',
                         '<td class="vtype">',vtype,'</td>',
                         '<td class="platform">',entry.platform,'</td>',
-                        '<td class="delay">', ( entry.delay > 0 ? '<em>+0H1'+parseInt(entry.delay / 60 , 10)+'</em>' : '-'), '<td>',
+                        '<td class="delay">', ( entry.delay > 0 ? '<em>+0H'+ ("0"+parseInt(entry.delay / 60 , 10)).substr(-2) +'</em>' : '-'), '<td>',
                     '</tr>'
                 ].join(''));
             });
