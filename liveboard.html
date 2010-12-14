@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8" />
+  <title></title>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://github.com/timesselens/jquery.irail/raw/master/lib/irail.js" type="text/javascript" charset="utf-8"></script>
+  <!-- <script src="lib/irail.js" charset="utf-8"></script> for debugging -->
+</head>
+<body>
+
+<script>
+$(function() { 
+
+    var searchopts = window.location.search.substr(1).split("&");
+    var opts = {}; $.map(searchopts,function(o,i) { var x = o.split('='); opts[x[0]] = x[1]; });
+
+    if(typeof irail.set_default_lang == "function") { irail.set_default_lang( opts.lang || 'nl'); }
+
+    if(!opts.station) {
+        alert('please provide station name in url e.g. &station=Aalst');
+    }
+
+    $(window).bind('irail.ready', function() {
+
+        // LIVEBOARD LOOKUP ________________________________________________________________________________________________________________________
+
+        irail.liveboards.lookup(opts.station, opts.dir || 'dep', update);
+       
+        // and keep at it ever 30s...
+        setInterval(function() { irail.liveboards.lookup(opts.station, opts.dir || 'dep', update); }, 30*1000);
+
+        function update(liveboard) {
+
+            var servertime = new Date(liveboard.timestamp * 1000);
+
+            $('#liveboard').empty().append([
+                '<table width="100%">',
+                    '<caption>', '<h2>', liveboard.station,' ', liveboard.direction , ' at (', servertime ,')</h2>', '</caption>',
+                    '<thead><tr>',
+                        '<th>Time</th>',
+                        '<th>Direction</th>',
+                        '<th class="vehicle"></th>',
+                        '<th class="platform">#</th>',
+                        '<th>delay</th>',
+                    '</tr></thead>',
+                    '<tbody>',
+                    '</tbody>',
+                '</table>'].join(''));
+
+            $.each(liveboard.entries, function(i, entry) {
+    
+                var sched = new Date( (entry.time + entry.delay) * 1000 );
+
+                function date_diff(d1,d2) { return parseInt( (d1.getTime() - d2.getTime())/1000, 10 ) }
+
+                var tristate = date_diff(sched, servertime) <= 0 ? 'left' : date_diff(sched,servertime) < 60 ? 'leaving' : 'pending';
+        
+                var d = new Date(entry.time * 1000);
+
+                var vtype = entry.vehicle.replace(/BE\.NMBS\./,'').replace(/\d+$/,'');
+
+                $('#liveboard table tbody').append([
+                    '<tr class="', tristate ,'" >',
+                        '<td><b>',d.getHours(),'</b>:<b>',d.getMinutes(),'</b></td>',
+                        '<td class="station">',entry.station,'</td>',
+                        '<td class="vtype">',vtype,'</td>',
+                        '<td class="platform">',entry.platform,'</td>',
+                        '<td class="delay">', ( entry.delay > 0 ? '<em>+0H1'+parseInt(entry.delay / 60 , 10)+'</em>' : '-'), '<td>',
+                    '</tr>'
+                ].join(''));
+            });
+
+            setInterval(function() {
+                $('#liveboard table tr.leaving').animate({'opacity': 0.3}, 1500);
+                $('#liveboard table tr.leaving').animate({'opacity': 1}, 1500);
+            }, 3000);
+        };
+    });
+
+});
+</script>
+
+<style> 
+    body { 
+        background: #302d3b;
+        margin: 0;
+    }
+    #liveboard {
+        color: yellow;
+        margin: 0 10px;
+        font-family: "DejaVu Sans Mono", "Monaco", "Lucida Console", monospace;
+        font-size: 1em;
+        line-height: 150%;
+        font-weight: bold;
+    }
+
+    #liveboard th { display: none; }
+    #liveboard caption {  color: white; background-color: #1b76f8; margin: 10px 0; }
+    #liveboard tbody { font-size: 2em; font-family: monospace;} 
+    #liveboard tr:nth-child(odd) { background: #53669b; }
+    #liveboard td {padding: 0.3em;}
+
+
+
+    #liveboard td.platform { width: 3em; text-align:right; }
+    #liveboard td.delay { width: 5em; text-align:right; }
+    #liveboard .station { width: 80%;  }
+    #liveboard table { border-collapse: collapse; }
+    #liveboard thead { background-color: #444; }
+    #liveboard thead th { text-align: left; }
+    #liveboard tbody td em { color: red; font-weight: bold; font-style: normal;}
+    #liveboard .leaving { }
+    #liveboard .left { opacity: 0.3; color: #c0c0c0}
+    @media screen and (max-device-width: 480px) { #liveboard { font-size: 2.5em; } }
+</style>
+
+<div class="output" id="liveboard"></div>
+       
+</body>
+</html>
+
+<!--
+Copyright (c) 2010 Tim Esselens <tim.esselens@gmail.com> 
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
