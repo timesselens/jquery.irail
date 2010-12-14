@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <title></title>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js" type="text/javascript" charset="utf-8"></script>
-  <script src="https://github.com/timesselens/jquery.irail/raw/master/lib/irail.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://github.com/timesselens/jquery.irail/raw/v0.01/lib/irail.js" type="text/javascript" charset="utf-8"></script>
   <!-- <script src="lib/irail.js" charset="utf-8"></script> for debugging -->
 </head>
 <body>
@@ -20,7 +20,8 @@ $(function() {
     if(typeof irail.set_default_lang == "function") { irail.set_default_lang( opts.lang || 'nl'); }
 
     if(!opts.station) {
-        alert('please provide station name in url e.g. ?station=Aalst');
+        $("#liveboard").hide();
+        $("#doc").show();
     }
 
     $(window).bind('irail.ready', function() {
@@ -107,6 +108,11 @@ $(function() {
     .cred { text-align: right; font-weight: normal font-size 0.6em; color: white; margin-right: 10px; line-height: 200%; }
     .cred a { text-decoration: underline; color: white; }
 
+    #doc {
+        display: none;
+        background: white;
+        padding: 1em;
+    }
 
 
     #liveboard td.platform { width: 3em; text-align:right; }
@@ -122,7 +128,33 @@ $(function() {
 </style>
 
 <div class="output" id="liveboard"></div>
+
+<div id="doc">
+    <h1>iRail Liveboard HTML app</h1>
+    <p> This page is able to load station arrival and departure data using the
+    <a href="https://github.com/timesselens/jquery.irail">jQuery.iRail</a>
+    library. It does not depend on server side technology, so you can save this page on your mobile smartphone and use it to quickly lookup live data</p>
+
+    <h1>Usage</h1>
+    <p>To change the behaviour of this page you need to add some things to the url<p>
+    <ul>
+        <li> station=<em>brussel-noord</em>
+        <li> lang=<em>nl</em> (en,fr,nl)
+        <li> dir=<em>arr</em> (arr,dep)
+    </ul>
+
+    <h1>Examples</h1>
+
+    <ul>
+        <li><a href="liveboard.html?station=brussel-noord">liveboard.html?station=brussel-noord</a>
+        <li><a href="liveboard.html?station=brussel-noord&lang=nl&dir=arr">liveboard.html?station=brussel-noord&lang=nl&dir=arr</a>
+        <li><a href="liveboard.html?station=dendermonde&lang=fr&dir=arr">liveboard.html?station=dendermonde&lang=fr&dir=arr</a>
+    </ul>
+
+</div>
+
 <div class="cred">written by <a href="http://github.com/timesselens/">Tim Esselens</a> - powered by <a href="http://project.irail.be">iRail</a></div>
+
        
 </body>
 </html>
