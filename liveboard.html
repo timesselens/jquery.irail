@@ -63,8 +63,10 @@ $(function() {
 
                 var vtype = entry.vehicle.replace(/BE\.NMBS\./,'').replace(/\d+$/,'');
 
+                var c_class = entry.platform == "NA" ? 'canceled' : '';
+
                 $('#liveboard table tbody').append([
-                    '<tr class="', tristate ,'" >',
+                    '<tr class="', tristate ,' ', c_class ,'" >',
                         '<td><b>',("0"+d.getHours()).substr(-2), '</b>:<b>',("0"+d.getMinutes()).substr(-2), '</b></td>',
                         '<td class="station">',entry.station,'</td>',
                         '<td class="vtype">',vtype,'</td>',
@@ -104,6 +106,7 @@ $(function() {
     #liveboard tbody { font-size: 2em; font-family: monospace;} 
     #liveboard tr:nth-child(odd) { background: #53669b; }
     #liveboard td {padding: 0.3em;}
+    #liveboard .canceled { color: red; }
 
     .cred { text-align: right; font-weight: normal font-size 0.6em; color: white; margin-right: 10px; line-height: 200%; }
     .cred a { text-decoration: underline; color: white; }
