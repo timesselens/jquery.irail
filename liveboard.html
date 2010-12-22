@@ -57,7 +57,9 @@ $(function() {
 
                 function date_diff(d1,d2) { return parseInt( (d1.getTime() - d2.getTime())/1000, 10 ) }
 
-                var tristate = date_diff(sched, servertime) <= 0 ? 'left' : date_diff(sched,servertime) < 60 ? 'leaving' : 'pending';
+                var tristate = date_diff(sched,servertime) < 60 ? 'leaving' : 'pending';
+
+                if(entry.left == 1) { tristate = 'left' }
         
                 var d = new Date(entry.time * 1000);
 
