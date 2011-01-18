@@ -33,6 +33,7 @@ $(function() {
         // and keep at it ever 30s...
         setInterval(function() { irail.liveboards.lookup(opts.station, opts.dir || 'dep', update); }, 30*1000);
 
+        function date_diff(d1,d2) { return parseInt( (d1.getTime() - d2.getTime())/1000, 10 ) }
         function update(liveboard) {
 
             var servertime = new Date(liveboard.timestamp * 1000);
@@ -53,19 +54,12 @@ $(function() {
 
             $.each(liveboard.entries, function(i, entry) {
     
-                var sched = new Date( (entry.time + entry.delay) * 1000 );
-
-                function date_diff(d1,d2) { return parseInt( (d1.getTime() - d2.getTime())/1000, 10 ) }
-
-                var tristate = date_diff(sched,servertime) < 60 ? 'leaving' : 'pending';
-
-                if(entry.left == 1) { tristate = 'left' }
-        
-                var d = new Date(entry.time * 1000);
-
-                var vtype = entry.vehicle.replace(/BE\.NMBS\./,'').replace(/\d+$/,'');
-
-                var c_class = entry.platform == "NA" ? 'canceled' : '';
+                var sched       = new Date( (entry.time + entry.delay) * 1000 );
+                var d           = new Date(entry.time * 1000);
+                var vtype       = entry.vehicle.replace(/BE\.NMBS\./,'').replace(/\d+$/,'');
+                var c_class     = entry.platform == "NA" ? 'canceled' : '';
+                var tristate    = entry.left == 1 ? 'left' 
+                                  : Math.abs(date_diff(sched,servertime)) < 60 ? 'leaving' : 'pending';
 
                 $('#liveboard table tbody').append([
                     '<tr class="', tristate ,' ', c_class ,'" >',
