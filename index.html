@@ -106,10 +106,10 @@ $(function() { // jQuery, wait for test page to load
 
         // LIVEBOARD LOOKUP ________________________________________________________________________________________________________________________
 
-        irail.liveboards.lookup('brussel noord', 'dep', update);
+        irail.liveboards.lookup('NMBS', 'brussel noord', 'dep', update);
        
         // and keep at it ever 30s...
-        setInterval(function() { irail.liveboards.lookup('brussel noord', 'dep', update); }, 30*1000);
+        setInterval(function() { irail.liveboards.lookup('NMBS', 'brussel noord', 'dep', update); }, 30*1000);
 
         function update(liveboard) {
 
@@ -239,7 +239,7 @@ test("check station list access and length", function() {
 
 });
 
-module("Live station search"); //---------------------------------------------------------------------------------------------
+module("Live station search (NMBS)"); //---------------------------------------------------------------------------------------------
 
 test("check for known stations", function() {
     
@@ -271,7 +271,7 @@ test("search form known stations", function() {
     ok(irail.stations.search('oostende')[0].name == "Oostende", "first result eq Oostende");
 });
 
-module("Live connnection search"); //---------------------------------------------------------------------------------------------
+module("Live connnection search (NMBS)"); //---------------------------------------------------------------------------------------------
 asyncTest("Brussel Noord - Oostende", function() {
 
     irail.connections.lookup({from: 'brussel noord', to: 'oostende'}, function(connections) {
@@ -320,33 +320,47 @@ asyncTest("Brussel Noord - Luik", function() {
 
 module("Live liveboard test"); //---------------------------------------------------------------------------------------------
 
-asyncTest("LiveBoard Brussel Noord", function() {
-    irail.liveboards.lookup("Brussel Noord", 'arr',function(liveboard) {
-        start();
-        ok(typeof liveboard != 'undefined', "liveboard is defined");
-        ok(typeof liveboard.timestamp != 'undefined', "liveboard has a timestamp");
-        ok(typeof liveboard.timestamp == 'number', "timestamp is a number");
-        ok(liveboard.station, "liveboard has a station");
-        ok(liveboard.direction, "liveboard has a direction");
+$.each([
+	["NMBS", "Brussel Noord", "arr"],
+	["NMBS", "Brussel Noord", "dep"],
+	["MIVB", "Vaderland", "dep"]
+//	, ["MIVB", "Vaderland", "arr"] // Arrival for MIVB doesn't seem to be supported, bug logged with iRail
+], function(i, entry) {
+	(function(system, station, direction) {
+		asyncTest("LiveBoard "+station+" "+direction+" ("+system+")", function() {
+		    irail.liveboards.lookup(system, station, direction, function(liveboard) {
+		        start();
+		        ok(typeof liveboard != 'undefined', "liveboard is defined");
+		        ok(typeof liveboard.timestamp != 'undefined', "liveboard has a timestamp");
+		        ok(typeof liveboard.timestamp == 'number', "timestamp is a number");
+		        ok(liveboard.station, "liveboard has a station");
+		        ok(liveboard.direction, "liveboard has a direction");
 
-        var epoch_now = parseInt(new Date().getTime() / 1000, 10);                                      
-        // measure of quality, some test might fail if your clock is not synchronized to an ntp server
-        ok(liveboard.timestamp <= epoch_now, "timestamp must not be in the future");                     
-        ok(liveboard.timestamp + 2 > epoch_now, "timestamp must be within reasonable parameters");
+		        var epoch_now = parseInt(new Date().getTime() / 1000, 10);                                      
+		        // measure of quality, some test might fail if your clock is not synchronized to an ntp server
+		        ok(liveboard.timestamp <= epoch_now, "timestamp must not be in the future");                     
+		        ok(liveboard.timestamp + 2 > epoch_now, "timestamp must be within reasonable parameters");
 
-        $.each(liveboard.entries, function(i,entry) {
-            ok(entry,"entry exists");
+		        $.each(liveboard.entries, function(i,entry) {
+		            ok(entry,"entry exists");
 
-            $.each('id delay time vehicle platform station'.split(' '),function(_,k) {
-                ok(typeof entry[k] != 'undefined', "liveboard entry has a '"+k+"' property");
-            });
-            ok(typeof entry.time == 'number', "time is a number");
-            ok(typeof entry.delay == 'number', "delay is a number");
-        });
-    });
+		            $.each('id delay time vehicle platform station'.split(' '),function(_,k) {
+		                ok(typeof entry[k] != 'undefined', "liveboard entry has a '"+k+"' property");
+		            });
+		            ok(typeof entry.time == 'number', "time is a number");
+		            ok(typeof entry.delay == 'number', "delay is a number");
+		        });
+		    })
+		});
+	}).apply(window, entry);
 });
 
-module("iRail API structure test"); //----------------------------------------------------------------------------------------------------------
+/*liveBoardTest("NMBS", "Brussel Noord", 'arr');
+liveBoardTest("NMBS", "Brussel Noord", 'dep');
+liveBoardTest("MIVB", "Beurs", 'arr');
+liveBoardTest("MIVB", "Beurs", 'dep');
+*/
+module("iRail API structure test (NMBS)"); //----------------------------------------------------------------------------------------------------------
 asyncTest("Liveboard singular arrival", function() {
     $.ajax({
         type: "GET",
@@ -440,6 +454,11 @@ asyncTest("Connection multiple vias", function() {
         <h3>Tue Dec  7 21:24:39 CET 2010</h3>
         <ul>
             <li> Added more testcases for connection lookups
+        </ul>
+        <h3>Sat Apr  16 12:30:00 EDT 2011</h3>
+        <ul>
+            <li> Added system (NMBS/MIVB) to irail.liveboards.lookup; breaks backwards compatibility
+			<li> Added tests for this
         </ul>
         <h2>Download or fork</h2>
         <p>This is a <strong>technology preview</strong>, more testcases required and welcomed</p>

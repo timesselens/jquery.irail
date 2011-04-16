@@ -28,10 +28,10 @@ $(function() {
 
         // LIVEBOARD LOOKUP ________________________________________________________________________________________________________________________
 
-        irail.liveboards.lookup(opts.station, opts.dir || 'dep', update);
+        irail.liveboards.lookup("nmbs", opts.station, opts.dir || 'dep', update);
        
         // and keep at it ever 30s...
-        setInterval(function() { irail.liveboards.lookup(opts.station, opts.dir || 'dep', update); }, 30*1000);
+        setInterval(function() { irail.liveboards.lookup("nmbs", opts.station, opts.dir || 'dep', update); }, 30*1000);
 
         function date_diff(d1,d2) { return parseInt( (d1.getTime() - d2.getTime())/1000, 10 ) }
         function update(liveboard) {
