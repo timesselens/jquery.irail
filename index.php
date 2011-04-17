@@ -1,4 +1,4 @@
 <?php
-// redirect to lvieboard.html
+// redirect to liveboard.html
 header('location: liveboard.html');
 ?>
