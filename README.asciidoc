@@ -1,7 +1,7 @@
 jquery.irail an API wrapper for api.irail.be
 ============================================
 
-WARNING: This is a developer preview. no docs, use (documented) source
+WARNING: There are known bugs in this release, see testcases.
 
 
 Manifest

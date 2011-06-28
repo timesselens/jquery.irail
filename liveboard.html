@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8" />
+  <title></title>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://github.com/timesselens/jquery.irail/raw/v0.03/lib/irail.js" type="text/javascript" charset="utf-8"></script>
+  <!-- <script src="lib/irail.js" charset="utf-8"></script> for debugging -->
+</head>
+<body>
+
+<!-- iRail liveboard written by Tim Esselens <tim.esselens@gmail.com> (c) 2010 using jQuery.irail -->
+
+<script>
+$(function() { 
+
+    var searchopts = window.location.search.substr(1).split("&");
+    var opts = {}; $.map(searchopts,function(o,i) { var x = o.split('='); opts[x[0]] = x[1]; });
+
+    if(typeof irail.set_default_lang == "function") { irail.set_default_lang( opts.lang || 'nl'); }
+
+    if(!opts.station) {
+        $("#liveboard").hide();
+        $("#doc").show();
+    }
+
+    $(window).bind('irail.ready', function() {
+
+        // LIVEBOARD LOOKUP ________________________________________________________________________________________________________________________
+
+        irail.liveboards.lookup("nmbs", opts.station, opts.dir || 'dep', update);
+       
+        // and keep at it ever 30s...
+        setInterval(function() { irail.liveboards.lookup("nmbs", opts.station, opts.dir || 'dep', update); }, 30*1000);
+
+        function date_diff(d1,d2) { return parseInt( (d1.getTime() - d2.getTime())/1000, 10 ) }
+        function update(liveboard) {
+
+            var servertime = new Date(liveboard.timestamp * 1000);
+
+            $('#liveboard').empty().append([
+                '<table width="100%">',
+                    '<caption>', '<h2>', liveboard.station,' ', liveboard.direction , ' at (', servertime ,')</h2>', '</caption>',
+                    '<thead><tr>',
+                        '<th>Time</th>',
+                        '<th>Direction</th>',
+                        '<th class="vehicle"></th>',
+                        '<th class="platform">#</th>',
+                        '<th>delay</th>',
+                    '</tr></thead>',
+                    '<tbody>',
+                    '</tbody>',
+                '</table>'].join(''));
+
+            $.each(liveboard.entries, function(i, entry) {
+    
+                var sched       = new Date( (entry.time + entry.delay) * 1000 );
+                var d           = new Date(entry.time * 1000);
+                var vtype       = entry.vehicle.replace(/BE\.NMBS\./,'').replace(/\d+$/,'');
+                var c_class     = entry.platform == "NA" ? 'canceled' : '';
+                var tristate    = entry.left == 1 ? 'left' 
+                                  : Math.abs(date_diff(sched,servertime)) < 60 ? 'leaving' : 'pending';
+
+                $('#liveboard table tbody').append([
+                    '<tr class="', tristate ,' ', c_class ,'" >',
+                        '<td><b>',("0"+d.getHours()).substr(-2), '</b>:<b>',("0"+d.getMinutes()).substr(-2), '</b></td>',
+                        '<td class="station">',entry.station,'</td>',
+                        '<td class="vtype">',vtype,'</td>',
+                        '<td class="platform">',entry.platform,'</td>',
+                        '<td class="delay">', ( entry.delay > 0 ? '<em>+0H'+ ("0"+parseInt(entry.delay / 60 , 10)).substr(-2) +'</em>' : '-'), '<td>',
+                    '</tr>'
+                ].join(''));
+            });
+
+            setInterval(function() {
+                $('#liveboard table tr.leaving').animate({'opacity': 0.3}, 1500);
+                $('#liveboard table tr.leaving').animate({'opacity': 1}, 1500);
+            }, 3500);
+        };
+    });
+
+});
+</script>
+
+<style> 
+    body { 
+        background: #302d3b;
+        margin: 0;
+        height: 100%;
+    }
+    #liveboard {
+        color: yellow;
+        margin: 0 10px;
+        font-family: "DejaVu Sans Mono", "Monaco", "Lucida Console", monospace;
+        font-size: 1em;
+        line-height: 150%;
+        font-weight: bold;
+    }
+
+    #liveboard th { display: none; }
+    #liveboard caption {  color: white; background-color: #1b76f8; margin: 10px 0; }
+    #liveboard tbody { font-size: 2em; font-family: monospace;} 
+    #liveboard tr:nth-child(odd) { background: #53669b; }
+    #liveboard td {padding: 0.3em;}
+    #liveboard .canceled { color: red; }
+
+    .cred { text-align: right; font-weight: normal font-size 0.6em; color: white; margin-right: 10px; line-height: 200%; }
+    .cred a { text-decoration: underline; color: white; }
+
+    #doc {
+        display: none;
+        background: white;
+        padding: 1em;
+    }
+
+
+    #liveboard td.platform { width: 3em; text-align:right; }
+    #liveboard td.delay { width: 5em; text-align:right; }
+    #liveboard .station { width: 80%;  }
+    #liveboard table { border-collapse: collapse; }
+    #liveboard thead { background-color: #444; }
+    #liveboard thead th { text-align: left; }
+    #liveboard tbody td em { color: red; font-weight: bold; font-style: normal;}
+    #liveboard .leaving { }
+    #liveboard .left { opacity: 0.3; color: #c0c0c0}
+    @media screen and (max-device-width: 480px) { #liveboard { font-size: 2.5em; } }
+</style>
+
+<div class="output" id="liveboard"></div>
+
+<div id="doc">
+    <h1>iRail Liveboard HTML app</h1>
+    <p> This page is able to load station arrival and departure data using the
+    <a href="https://github.com/timesselens/jquery.irail">jQuery.iRail</a>
+    library. It does not depend on server side technology, so you can save this page on your mobile smartphone and use it to quickly lookup live data</p>
+
+    <h1>Usage</h1>
+    <p>To change the behaviour of this page you need to add some things to the url<p>
+    <ul>
+        <li> station=<em>brussel-noord</em>
+        <li> lang=<em>nl</em> (en,fr,nl)
+        <li> dir=<em>arr</em> (arr,dep)
+    </ul>
+
+    <h1>Examples</h1>
+
+    <ul>
+        <li><a href="liveboard.html?station=brussel-noord">liveboard.html?station=brussel-noord</a>
+        <li><a href="liveboard.html?station=brussel-noord&lang=nl&dir=arr">liveboard.html?station=brussel-noord&lang=nl&dir=arr</a>
+        <li><a href="liveboard.html?station=dendermonde&lang=fr&dir=arr">liveboard.html?station=dendermonde&lang=fr&dir=arr</a>
+    </ul>
+
+</div>
+
+<div class="cred">written by <a href="http://github.com/timesselens/">Tim Esselens</a> - powered by <a href="http://project.irail.be">iRail</a></div>
+
+       
+</body>
+</html>
+
+<!--
+Copyright (c) 2010 Tim Esselens <tim.esselens@gmail.com> 
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
